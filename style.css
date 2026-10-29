@@ -1,0 +1,61 @@
+/* Hallmark · shape: app screen · genre: atmospheric · theme: custom · redesign: full
+ * idea: a courier shift played directly inside a rain-soaked courtyard
+ * paper: oklch(27% 0.009 155) · accent: oklch(87% 0.15 92) · display: Trebuchet MS · body: Trebuchet MS
+ * nav: compact game HUD · signature: full-size playable courtyard · states: ready running paused lost level-complete won
+ * axes: dark/grotesk-heavy/warm · posture: game canvas · contrast: checked · v2.0.0 */
+/* Hallmark · pre-emit critique: large landing-page copy displaced play; removed introduction and placed the game first. */
+/* Hallmark · font: locally installed for offline play. */
+/* Hallmark · waive 80 · user requested a drawn game · Canvas illustration is the actual playable product. */
+@import url("./tokens.css");
+@import url("./base.css");
+html,body{overflow-x:clip}
+body{min-height:100dvh;display:flex;align-items:center}
+.shell{width:100%;max-width:1440px;margin-inline:auto;padding:var(--space-md) var(--space-lg)}
+.dashboard{display:flex;align-items:center;gap:var(--space-lg);min-height:52px;padding-bottom:var(--space-sm)}
+.dashboard h1{font-size:25px;line-height:1.1;letter-spacing:-.6px;white-space:nowrap}
+.route{font-size:14px;color:var(--color-ink-2)}
+.stats{margin-left:auto;display:flex;gap:var(--space-lg);font-size:13px;color:var(--color-ink-2)}
+.stats b{color:var(--color-ink);font-size:16px;margin-left:var(--space-xs);font-variant-numeric:tabular-nums}
+button{border:1px solid var(--color-rule);border-radius:2px;background:var(--color-paper-2);color:var(--color-ink);padding:var(--space-xs) var(--space-sm);cursor:pointer;font-size:13px;min-height:40px;touch-action:manipulation}
+button:hover{background:var(--color-paper-3);border-color:var(--color-ink-2)}
+button:active{transform:translateY(1px)}
+button:focus-visible,canvas:focus-visible{outline:2px solid var(--color-focus);outline-offset:2px}
+button:disabled{background:var(--color-paper);color:var(--color-muted);border-color:var(--color-paper-3);cursor:not-allowed;transform:none}
+.game-wrap{width:100%;background:var(--color-paper-2)}
+.viewport{width:100%;position:relative;aspect-ratio:1200 / 640;max-height:calc(100dvh - 174px);margin-inline:auto}
+canvas{width:100%;height:100%;display:block;object-fit:contain;background:var(--color-paper-2);touch-action:none}
+.overlay{position:absolute;inset:0;display:flex;align-items:center;padding:var(--space-xl);background:var(--color-shade)}
+.overlay-card{max-width:360px;background:var(--color-menu);padding:var(--space-lg)}
+#overlay-kicker{font-size:14px;color:var(--color-ink-2);margin-bottom:var(--space-sm)}
+h2{font-size:clamp(30px,4vw,52px);line-height:1.04;margin-bottom:var(--space-md);letter-spacing:-1px}
+#overlay-text{font-size:15px;line-height:1.55;margin-bottom:var(--space-lg);color:var(--color-ink-2)}
+.primary{background:var(--color-accent);border-color:var(--color-accent);color:var(--color-accent-ink);font-size:16px;font-weight:700;min-height:48px;padding-inline:var(--space-lg)}
+.primary:hover{background:var(--color-accent-hover);border-color:var(--color-accent-hover)}
+.shortcut{font-size:12px;color:var(--color-muted);margin-top:var(--space-xs)}
+.game-toolbar{display:flex;justify-content:space-between;align-items:center;gap:var(--space-md);min-height:54px}
+#message{color:var(--color-ink-2);font-size:13px;max-width:65ch}
+.toolbar-buttons{display:flex;gap:var(--space-xs);flex-shrink:0}
+footer{display:flex;align-items:center;gap:var(--space-lg);padding-top:var(--space-xs);font-size:12px;color:var(--color-muted)}
+kbd{font:inherit;color:var(--color-ink-2)}
+.fiction{margin-left:auto}
+.touch-controls{display:none;justify-content:space-between;padding-top:var(--space-xs);gap:var(--space-md)}
+.touch-controls>div{display:flex;gap:var(--space-sm)}
+.touch-controls button{min-width:72px;min-height:52px;touch-action:none;user-select:none;font-size:20px}
+.touch-controls button[data-control=jump]{padding-inline:var(--space-lg);font-size:16px}
+.touch-controls button.pressed{background:var(--color-accent);color:var(--color-accent-ink)}
+.no-script{position:absolute;inset:0;background:var(--color-paper);padding:var(--space-lg)}
+:fullscreen{background:var(--color-paper);display:flex;flex-direction:column;justify-content:center;max-width:none;padding:var(--space-sm)}
+:fullscreen .viewport{max-height:calc(100dvh - 156px)}
+@media(pointer:coarse),(max-width:700px){.touch-controls{display:flex}.viewport{max-height:calc(100dvh - 240px)}}
+@media(max-width:700px){.shell{padding:var(--space-xs)}.dashboard{gap:var(--space-sm);flex-wrap:wrap}.dashboard h1{font-size:21px}.stats{gap:var(--space-sm);font-size:12px}.stats span:nth-child(2){display:none}.stats b{font-size:14px;margin-left:var(--space-2xs)}.route{font-size:12px}#fullscreen{min-height:32px;font-size:12px;padding:var(--space-2xs) var(--space-xs)}.overlay{padding:var(--space-sm)}.overlay-card{padding:var(--space-sm);max-width:64%}#overlay-kicker{font-size:12px;margin-bottom:var(--space-2xs)}h2{font-size:25px;margin-bottom:var(--space-xs)}#overlay-text{font-size:12px;line-height:1.35;margin-bottom:var(--space-sm)}.primary{font-size:13px;min-height:38px;padding-inline:var(--space-sm)}.shortcut{font-size:11px;margin-top:var(--space-2xs)}footer{gap:var(--space-sm);flex-wrap:wrap;font-size:11px}.fiction{display:none}.game-toolbar{gap:var(--space-xs)}#message{font-size:12px}.toolbar-buttons button{font-size:12px;padding:var(--space-xs)}}
+@media(max-height:500px) and (orientation:landscape){.shell{padding:var(--space-2xs) var(--space-sm)}.dashboard{min-height:34px;padding-bottom:var(--space-2xs)}.dashboard h1{font-size:18px}.viewport{max-height:calc(100dvh - 135px)}.game-toolbar{min-height:36px}.touch-controls{position:fixed;left:var(--space-sm);right:var(--space-sm);bottom:var(--space-sm);pointer-events:none}.touch-controls button{pointer-events:auto;opacity:.8}footer{display:none}.overlay-card{padding:var(--space-sm)}#overlay-text{font-size:12px;margin-bottom:var(--space-sm)}h2{font-size:26px;margin-bottom:var(--space-xs)}#overlay-kicker{margin-bottom:var(--space-2xs)}}
+@media(prefers-reduced-motion:reduce){*{animation:none;transition:none}}
+
+/* Small shell finish: keep the courtyard dominant. */
+:root{--color-frame:oklch(43% .016 125);--color-shadow:oklch(12% .008 155 / .35)}
+body{background:var(--color-paper)}
+.shell{border-top:3px solid var(--color-accent)}
+.dashboard h1{border-bottom:2px solid var(--color-accent);padding-bottom:var(--space-2xs)}
+.game-wrap{outline:1px solid var(--color-frame);box-shadow:0 12px 30px var(--color-shadow)}
+.game-toolbar{border-bottom:1px solid var(--color-rule)}
+

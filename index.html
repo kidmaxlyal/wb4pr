@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#242827">
+<title>До двери: смена велокурьера</title>
+<meta name="description" content="Рисованный платформер про велокурьера: три двора, посылки и доставка до двери.">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main class="shell">
+<header class="dashboard">
+<h1>До двери</h1>
+<span id="route" class="route">Двор 1 из 3</span>
+<div class="stats"><span>Посылки <b id="score">0 / 3</b></span><span>За смену <b id="total-score">0</b></span><span>Рекорд <b id="best">0</b></span></div>
+<button id="fullscreen" aria-label="Полный экран">На весь экран</button>
+</header>
+<section class="game-wrap" aria-label="Игра До двери">
+<div class="viewport">
+<canvas id="game" width="1200" height="640" tabindex="0" aria-label="Велокурьер: стрелки или A D — ехать, пробел или W — прыгать."></canvas>
+<div class="overlay" id="overlay">
+<div class="overlay-card">
+<p id="overlay-kicker">Вечерняя смена</p>
+<h2 id="overlay-title">До двери</h2>
+<p id="overlay-text">Заберите три посылки и найдите зелёный подъезд. Клиент уже спускается. С прошлого четверга.</p>
+<button class="primary" id="start">Начать смену</button>
+<p class="shortcut">Enter или пробел</p>
+</div>
+</div>
+<noscript><p class="no-script">Для игры нужен JavaScript. Включите его и обновите страницу.</p></noscript>
+</div>
+</section>
+<div class="game-toolbar">
+<p id="message" aria-live="polite">Курьеры со двора.</p>
+<div class="toolbar-buttons"><button id="pause" disabled>Пауза</button><button id="restart">Заново</button></div>
+</div>
+<div class="touch-controls" aria-label="Экранное управление"><div><button data-control="left" aria-label="Ехать влево">Влево</button><button data-control="right" aria-label="Ехать вправо">Вправо</button></div><button data-control="jump" aria-label="Прыгнуть">Прыжок</button></div>
+<footer><span><kbd>Стрелки</kbd> / <kbd>A D</kbd> ехать</span><span><kbd>Пробел</kbd> / <kbd>W</kbd> прыгать</span><span><kbd>Esc</kbd> пауза</span><span class="fiction">Вымышленная смена. Знакомый двор.</span></footer>
+</main>
+<script type="module" src="main.js?v=2"></script>
+</body></html>
+
