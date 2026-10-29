@@ -4,15 +4,15 @@
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#242827">
 <title>До двери: смена велокурьера</title>
-<meta name="description" content="Рисованный платформер про велокурьера: три двора, посылки и доставка до двери.">
+<meta name="description" content="Рисованный платформер про велокурьера: смены, дворовые маршруты, чаевые и улучшения велосипеда.">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 <main class="shell">
 <header class="dashboard">
 <h1>До двери</h1>
-<span id="route" class="route">Двор 1 из 3</span>
-<div class="stats"><span>Посылки <b id="score">0 / 3</b></span><span>За смену <b id="total-score">0</b></span><span>Рекорд <b id="best">0</b></span></div>
+<span id="route" class="route">Смена 1 / двор 1</span>
+<div class="stats"><span>Посылки <b id="score">0 / 3</b></span><span title="Бонус за скорость уменьшается со временем, но заказ не провалится">Бонус <b id="timer">0:00</b></span><span>Кошелёк <b id="wallet">0 ₽</b></span><span>Рекорд <b id="best">0</b></span></div>
 <button id="fullscreen" aria-label="Полный экран">На весь экран</button>
 </header>
 <section class="game-wrap" aria-label="Игра До двери">
@@ -22,7 +22,15 @@
 <div class="overlay-card">
 <p id="overlay-kicker">Вечерняя смена</p>
 <h2 id="overlay-title">До двери</h2>
-<p id="overlay-text">Заберите три посылки и найдите зелёный подъезд. Клиент уже спускается. С прошлого четверга.</p>
+<p id="overlay-text">Три посылки до подъезда. Чаевые по пути, собаки во дворе. Зарабатывайте на улучшения и следующую смену.</p>
+<div id="order-result" class="order-result" hidden></div>
+<div id="workshop" class="workshop" hidden>
+<h3>Мастерская у подъезда</h3>
+<button id="upgrade-grip" class="upgrade"><span><kbd>1</kbd> Тормоза <small id="grip-rank">0 / 3</small></span><span id="grip-price">80 ₽</span></button>
+<p>Точнее останавливаться на узких опорах.</p>
+<button id="upgrade-bonus" class="upgrade"><span><kbd>2</kbd> Термосумка <small id="bonus-rank">0 / 3</small></span><span id="bonus-price">120 ₽</span></button>
+<p>Больше оплата за каждый доставленный заказ.</p>
+</div>
 <button class="primary" id="start">Начать смену</button>
 <p class="shortcut">Enter или пробел</p>
 </div>
@@ -32,11 +40,11 @@
 </section>
 <div class="game-toolbar">
 <p id="message" aria-live="polite">Курьеры со двора.</p>
-<div class="toolbar-buttons"><button id="pause" disabled>Пауза</button><button id="restart">Заново</button></div>
+<div class="toolbar-buttons"><span id="total-score" class="parcel-total" title="Посылки за весь текущий заезд">0 посылок</span><button id="pause" disabled>Пауза</button><button id="restart" title="Начать заезд с первого двора. Деньги и улучшения сохраняются.">Новый заезд</button></div>
 </div>
-<div class="touch-controls" aria-label="Экранное управление"><div><button data-control="left" aria-label="Ехать влево">Влево</button><button data-control="right" aria-label="Ехать вправо">Вправо</button></div><button data-control="jump" aria-label="Прыгнуть">Прыжок</button></div>
-<footer><span><kbd>Стрелки</kbd> / <kbd>A D</kbd> ехать</span><span><kbd>Пробел</kbd> / <kbd>W</kbd> прыгать</span><span><kbd>Esc</kbd> пауза</span><span class="fiction">Вымышленная смена. Знакомый двор.</span></footer>
+<div class="touch-controls" aria-label="Экранное управление"><div><button data-control="left" aria-label="Ехать влево">Влево</button><button data-control="right" aria-label="Ехать вправо">Вправо</button><button data-control="brake" aria-label="Тормозить">Тормоз</button></div><button data-control="jump" aria-label="Прыгнуть">Прыжок</button></div>
+<footer><span><kbd>Стрелки</kbd> / <kbd>A D</kbd> ехать</span><span><kbd>Пробел</kbd> / <kbd>W</kbd> прыгать</span><span><kbd>S / ↓</kbd> тормоз</span><span><kbd>Esc</kbd> пауза</span><span class="fiction">Чаевые необязательны. Заказ важнее.</span></footer>
 </main>
-<script type="module" src="main.js?v=2"></script>
+<script type="module" src="main.js?v=3"></script>
 </body></html>
 

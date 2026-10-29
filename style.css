@@ -58,4 +58,17 @@ body{background:var(--color-paper)}
 .dashboard h1{border-bottom:2px solid var(--color-accent);padding-bottom:var(--space-2xs)}
 .game-wrap{outline:1px solid var(--color-frame);box-shadow:0 12px 30px var(--color-shadow)}
 .game-toolbar{border-bottom:1px solid var(--color-rule)}
+.overlay{overflow-y:auto;align-items:flex-start}
+.overlay-card{margin-block:auto;max-width:410px;flex-shrink:0}
+.workshop{margin-block:var(--space-md)}
+.workshop h3{font-size:16px;margin-bottom:var(--space-xs)}
+.upgrade{display:flex;width:100%;justify-content:space-between;align-items:center;gap:var(--space-sm);font-size:14px;min-height:42px}
+.upgrade small{font-size:12px;color:var(--color-muted);margin-left:var(--space-xs)}
+.upgrade kbd{display:inline-block;min-width:18px;color:var(--color-accent)}
+.workshop p{font-size:12px;color:var(--color-muted);line-height:1.4;margin:var(--space-2xs) 0 var(--space-sm)}
+.order-result{color:var(--color-accent);font-size:14px;margin-bottom:var(--space-sm)}
+.expired{color:var(--color-error)}
+.parcel-total{align-self:center;font-size:12px;color:var(--color-muted)}
+@media(max-width:700px){.dashboard{gap:var(--space-xs)}.stats{order:3;width:100%;margin-left:0;justify-content:space-between}.stats span:nth-child(2){display:inline}.route{margin-left:auto}#fullscreen{margin-left:var(--space-xs)}.overlay-card{max-width:90%;width:350px}.overlay:has(.workshop:not([hidden])){background:var(--color-menu)}.parcel-total{display:none}.touch-controls button{min-width:56px;font-size:15px}.touch-controls>div{gap:var(--space-xs)}.touch-controls button[data-control=jump]{padding-inline:var(--space-sm)}.viewport{max-height:none}.workshop h3{font-size:14px}#overlay-text{font-size:13px}}
+@media(max-height:500px) and (orientation:landscape){.dashboard{flex-wrap:nowrap}.stats{order:0;width:auto;margin-left:auto;gap:var(--space-sm)}.viewport{max-height:calc(100dvh - 120px)}.overlay-card{max-width:500px;width:500px}.overlay:has(.workshop:not([hidden])) .overlay-card{margin:0 auto}.workshop{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);column-gap:var(--space-sm)}.workshop h3{grid-column:1/-1}.workshop .upgrade{grid-row:2}.workshop p{grid-row:3}.workshop[hidden]{display:none}}
 

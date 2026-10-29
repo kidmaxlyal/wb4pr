@@ -19,12 +19,15 @@ export class Player {
     this.distance = 0;
     this.landing = 0;
     this.jumpBuffer = 0;
+    this.grip = 0;
+    this.braking = false;
   }
 
   update(dt, input, solids) {
     const axis = input.axis;
-    const target = axis * PHYSICS.speed;
-    const delta = PHYSICS.acceleration * dt;
+    this.braking = Boolean(input.brake || input.held?.('brake'));
+    const target = this.braking ? 0 : axis * PHYSICS.speed;
+    const delta = PHYSICS.acceleration * (1 + this.grip * 0.18) * (this.braking ? 2.6 : 1) * dt;
     this.vx += Math.max(-delta, Math.min(delta, target - this.vx));
     if (axis) this.facing = axis;
     if (input.consumeJump()) this.jumpBuffer = 0.12;

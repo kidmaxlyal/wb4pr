@@ -213,6 +213,11 @@ function courier(c,p,t) {
     }
     ellipse(c,x,-14,2.1,2.1,'#c7c3a5');
   }
+  if(p.braking) {
+    line(c,[[-42,-1],[-31,-1]],'#aabdb666',2);
+    line(c,[[-38,-4],[-29,-4]],'#aabdb64d',1);
+    ellipse(c,-30,-27,2.5,2.5,'#e3a582');
+  }
   const phase=Math.abs(p.vx||0)>3 ? t*11 : .6;
   const pedalX=Math.cos(phase)*7, pedalY=Math.sin(phase)*6;
   line(c,[[-4,-35],[2,-25],[pedalX,-14+pedalY]],'#303538',7);
@@ -237,14 +242,76 @@ function courier(c,p,t) {
   c.restore();
 }
 
+function tipCoin(c,coin,t,index) {
+  if(coin.collected) return;
+  const x=coin.x+(coin.w||22)/2, y=coin.y+(coin.h||22)/2+Math.sin(t*3+index)*2;
+  const glow=c.createRadialGradient(x,y,3,x,y,23);
+  glow.addColorStop(0,'#e1bd6040'); glow.addColorStop(1,'#e1bd6000');
+  rect(c,x-24,y-24,48,48,glow);
+  ellipse(c,x,y,10,10,'#5c543b'); ellipse(c,x,y-1,8.5,8.5,'#e4c575');
+  ellipse(c,x,y-1,6.5,6.5,'#b9974b');
+  c.save(); c.textAlign='center'; c.font='bold 13px sans-serif';
+  c.fillStyle='#fff0b0'; c.fillText('₽',x,y+4); c.restore();
+}
+
+function strayDog(c,dog,t,player) {
+  const w=dog.w||45,h=dog.h||30,x=dog.x,y=dog.y;
+  const facing=dog.facing || (Math.cos((dog.phase||0)+t*(dog.speed||1))>=0?1:-1);
+  const close=player && Math.abs(player.x+player.w/2-x-w/2)<105 && Math.abs(player.y-y)<100;
+  c.save(); c.translate(x+w/2,y+h); c.scale(facing*w/45,h/30);
+  ellipse(c,0,0,24,3,'#132d3555');
+  const gait=Math.sin(t*9+(dog.phase||0))*3;
+  line(c,[[-12,-10],[-15-gait,-1]],'#493d36',4);
+  line(c,[[7,-10],[10+gait,-1]],'#493d36',4);
+  ellipse(c,-3,-14,17,9,'#92785b');
+  line(c,[[-15,-16],[-22,-20],[-23,-25]],'#92785b',4);
+  line(c,[[-7,-10],[-5+gait,-1]],'#b39b76',4);
+  line(c,[[10,-12],[14-gait,-1]],'#b39b76',4);
+  ellipse(c,13,-20,8,8,'#a28a65');
+  c.beginPath(); c.moveTo(8,-23); c.lineTo(7,-30); c.lineTo(16,-25); c.fillStyle='#604d3d'; c.fill();
+  ellipse(c,20,-19,7,4,'#b7a07c'); ellipse(c,25,-20,2,2,'#29343a');
+  ellipse(c,15,-23,1.5,1.5,close?'#e9cf87':'#25383d');
+  line(c,[[11,-13],[19,-15]],'#9a4b3d',3);
+  if(close) {
+    line(c,[[19,-14],[22,-12]],'#d38e79',2);
+    label(c,'!',15,-36,15,'#e0a47b');
+  }
+  c.restore();
+}
+
+function routeHints(c,level) {
+  const dog=(level.dogs||[])[0];
+  if(dog) {
+    const x=Math.max(4,Math.min(W-148,(dog.baseX??dog.x)-75)),y=Math.max(35,dog.y-45);
+    rect(c,x,y,145,20,'#243b41d9');
+    label(c,'СОБАКА. ПЕРЕПРЫГНИ.',x+7,y+14,9,'#cdbb95');
+  }
+  const coin=(level.coins||[]).find(coin=>!coin.collected);
+  if(coin) {
+    const x=Math.max(4,Math.min(W-118,coin.x-38)),y=Math.max(30,coin.y-28);
+    rect(c,x,y,115,17,'#243b41c9');
+    label(c,'₽ — ЧАЕВЫЕ',x+8,y+12,9,'#dfc67f');
+  }
+}
+
 export function render(ctx,game,time=0) {
   const t=!game.reducedMotion && Number.isFinite(time)?time:0, level=game.level||{};
   ctx.save(); ctx.clearRect(0,0,W,H); ctx.lineCap='round'; ctx.lineJoin='round';
-  scenery(ctx,t,game.levelIndex||0);
+  const variant=(game.levelIndex||0)%6;
+  scenery(ctx,t,variant%3);
+  if(variant>=3) {
+    // A second circuit has colder fog; silhouettes and collision edges stay unchanged.
+    const fog=ctx.createLinearGradient(0,230,0,540);
+    fog.addColorStop(0,'#a4b2ab00'); fog.addColorStop(.7,'#a4b2ab20'); fog.addColorStop(1,'#a4b2ab00');
+    rect(ctx,0,230,W,310,fog);
+  }
   (level.hazards||[]).forEach(p=>hazard(ctx,p,t));
   (level.platforms||[]).forEach((p,i)=>platform(ctx,p,i));
   finish(ctx,level.finish,(level.items||[]).every(i=>i.collected));
   (level.items||[]).forEach((item,i)=>parcel(ctx,item,t,i));
+  (level.coins||[]).forEach((coin,i)=>tipCoin(ctx,coin,t,i));
+  (level.dogs||[]).forEach(dog=>strayDog(ctx,dog,t,game.player));
+  routeHints(ctx,level);
   courier(ctx,game.player,t);
   // Restrained edge shade grounds the scene without obscuring the playable route.
   const vignette=ctx.createRadialGradient(W/2,H/2,230,W/2,H/2,720); vignette.addColorStop(0,'#10263200'); vignette.addColorStop(1,'#10263266'); rect(ctx,0,0,W,H,vignette);

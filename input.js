@@ -2,6 +2,7 @@ const KEYS = new Map([
   ['ArrowLeft', 'left'], ['KeyA', 'left'],
   ['ArrowRight', 'right'], ['KeyD', 'right'],
   ['Space', 'jump'], ['KeyW', 'jump'],
+  ['ArrowDown', 'brake'], ['KeyS', 'brake'],
 ]);
 
 export class Input {
@@ -56,6 +57,7 @@ export class Input {
   }
 
   get axis() { return Number(this.held('right')) - Number(this.held('left')); }
+  get brake() { return this.held('brake'); }
 
   consumeJump() {
     const jump = this.jumpQueued;

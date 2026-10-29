@@ -1,45 +1,13 @@
 import { Player } from './Player.js';
 import { overlaps } from './collision.js';
 import { render } from './renderer.js';
+import { LEVELS } from './levels.js';
 
 const STEP = 1 / 120;
-const STORAGE_KEY = 'courier-last-order-best-v1';
-const LEVELS = [
-  {
-    name: 'Двор № 1', subtitle: 'Клиент просил не звонить. Домофон тоже.',
-    platforms: [
-      { x: 0, y: 550, w: 250, h: 90 }, { x: 315, y: 465, w: 180, h: 25 },
-      { x: 555, y: 395, w: 180, h: 25 }, { x: 790, y: 465, w: 160, h: 25 },
-      { x: 1010, y: 550, w: 190, h: 90 },
-    ],
-    items: [{ x: 390, y: 425 }, { x: 625, y: 355 }, { x: 915, y: 425 }],
-    hazards: [{ x: 250, y: 610, w: 760, h: 70 }],
-    finish: { x: 1115, y: 438, w: 65, h: 112 }, spawn: { x: 75, y: 482 },
-  },
-  {
-    name: 'Двор № 2 · Обходной путь', subtitle: 'Подъезд наверху слева. Сначала направо, потом назад — навигатор уверен.',
-    platforms: [
-      { x: 0, y: 550, w: 260, h: 90 }, { x: 320, y: 465, w: 190, h: 25 },
-      { x: 575, y: 390, w: 200, h: 25 }, { x: 835, y: 290, w: 200, h: 25 },
-      { x: 575, y: 190, w: 200, h: 25 },
-    ],
-    items: [{ x: 400, y: 425 }, { x: 650, y: 350 }, { x: 930, y: 250 }],
-    hazards: [{ x: 260, y: 610, w: 940, h: 70 }],
-    finish: { x: 590, y: 78, w: 65, h: 112 }, spawn: { x: 65, y: 482 },
-  },
-  {
-    name: 'Двор № 3 · Последняя миля', subtitle: 'Узкие опоры, длинная смена. Перед посадкой можно отпустить газ.',
-    platforms: [
-      { x: 0, y: 550, w: 170, h: 90 }, { x: 230, y: 465, w: 120, h: 25 },
-      { x: 420, y: 380, w: 130, h: 25 }, { x: 620, y: 465, w: 100, h: 25 },
-      { x: 790, y: 370, w: 115, h: 25 }, { x: 950, y: 460, w: 90, h: 25 },
-      { x: 1090, y: 550, w: 110, h: 90 },
-    ],
-    items: [{ x: 270, y: 425 }, { x: 650, y: 425 }, { x: 980, y: 420 }],
-    hazards: [{ x: 170, y: 610, w: 920, h: 70 }],
-    finish: { x: 1120, y: 438, w: 65, h: 112 }, spawn: { x: 45, y: 482 },
-  },
-];
+const SAVE_KEY = 'courier-career-v2';
+const LEGACY_KEY = 'courier-last-order-best-v1';
+const integer = (value, fallback = 0, max = 1e9) =>
+  Number.isFinite(value) ? Math.min(max, Math.max(0, Math.floor(value))) : fallback;
 
 export class Game {
   constructor(canvas, input, onState = () => {}) {
@@ -50,14 +18,18 @@ export class Game {
     this.status = 'ready';
     this.score = 0;
     this.best = 0;
+    this.wallet = 0;
+    this.shift = 1;
+    this.upgrades = { grip: 0, bonus: 0 };
+    this.deliveries = 0;
     this.storageAvailable = true;
-    try { this.best = Math.max(0, Math.min(LEVELS.reduce((sum, level) => sum + level.items.length, 0), Number(localStorage.getItem(STORAGE_KEY)) || 0)); }
-    catch { this.storageAvailable = false; }
     this.levelIndex = 0;
     this.elapsed = 0;
+    this.deliveryReward = 0;
     this.frame = null;
     this.lastTime = null;
     this.accumulator = 0;
+    this.readCareer();
     this.tick = this.tick.bind(this);
     this.loadLevel();
     this.visibilityHandler = () => {
@@ -65,38 +37,104 @@ export class Game {
       if (document.hidden) this.input.clear();
     };
     document.addEventListener('visibilitychange', this.visibilityHandler);
-    this.message = 'Три посылки. Один подъезд. Ни одной ровной дороги.';
+    this.message = 'Три посылки до подъезда. Чаевые по желанию. S или ↓ — тормоз.';
     this.notify();
     this.draw();
   }
 
+  readCareer() {
+    try {
+      const legacy = Number(localStorage.getItem(LEGACY_KEY));
+      this.best = integer(legacy);
+      const raw = localStorage.getItem(SAVE_KEY);
+      if (!raw) return;
+      let data;
+      try { data = JSON.parse(raw); } catch { return; }
+      if (!data || data.version !== 2) return;
+      this.wallet = integer(data.wallet);
+      this.best = Math.max(this.best, integer(data.best));
+      this.deliveries = integer(data.deliveries);
+      this.upgrades.grip = integer(data.upgrades?.grip, 0, 3);
+      this.upgrades.bonus = integer(data.upgrades?.bonus, 0, 3);
+      this.shift = Math.max(1, integer(data.run?.shift, 1, 9999));
+      this.levelIndex = integer(data.run?.levelIndex, 0, LEVELS.length - 1);
+      this.score = integer(data.run?.score);
+      this.resumed = this.levelIndex > 0 || this.shift > 1;
+    } catch { this.storageAvailable = false; }
+  }
+
+  saveCareer() {
+    let shift = this.shift, levelIndex = this.levelIndex;
+    if (this.status === 'level-complete') levelIndex += 1;
+    if (this.status === 'won') { levelIndex = 0; shift += 1; }
+    try {
+      localStorage.setItem(SAVE_KEY, JSON.stringify({
+        version: 2, wallet: this.wallet, best: this.best,
+        deliveries: this.deliveries, upgrades: this.upgrades,
+        run: { shift, levelIndex, score: ['level-complete', 'won'].includes(this.status) ? this.score : this.levelStartScore },
+      }));
+    } catch { this.storageAvailable = false; }
+  }
+
   loadLevel() {
     const source = LEVELS[this.levelIndex];
+    const mirror = this.shift % 2 === 0;
+    const transform = item => ({ ...item, x: mirror ? 1200 - item.x - item.w : item.x });
+    const platforms = source.platforms.map(transform);
+    const items = source.items.map(item => transform({ ...item, w: 28, h: 28, collected: false }));
+    const coins = source.coins.map(item => transform({ ...item, w: 24, h: 24, collected: false }));
+    const speedFactor = 1 + Math.min(this.shift - 1, 6) * 0.12;
+    const dogs = source.dogs.map(dog => {
+      const baseX = mirror ? 1200 - dog.baseX - 45 : dog.baseX;
+      return { ...dog, baseX, x: baseX, w: 45, h: 30, speed: dog.speed * speedFactor };
+    });
+    // Later shifts reverse the same physically validated routes, not jump distances.
     this.level = {
-      ...source,
-      platforms: source.platforms.map(platform => ({ ...platform })),
-      items: source.items.map(item => ({ ...item, w: 28, h: 28, collected: false })),
-      hazards: source.hazards.map(hazard => ({ ...hazard })),
-      finish: { ...source.finish },
+      ...source, platforms, items, coins, dogs,
+      hazards: source.hazards.map(transform), finish: transform(source.finish),
+      spawn: { x: mirror ? 1200 - source.spawn.x - 52 : source.spawn.x, y: source.spawn.y },
     };
-    this.player = new Player(source.spawn.x, source.spawn.y);
+    this.player = new Player(this.level.spawn.x, this.level.spawn.y);
+    this.player.facing = mirror ? -1 : (this.level.platforms[1].x < platforms[0].x ? -1 : 1);
     this.player.grounded = true;
+    this.player.grip = this.upgrades.grip;
+    this.timeLeft = Math.max(25, source.orderSeconds - Math.min(this.shift - 1, 6) * 3);
+    this.orderElapsed = 0;
+    this.lastSecond = Math.ceil(this.timeLeft);
+    this.tips = 0;
+    this.deliveryReward = 0;
+    this.levelStartScore = this.score;
     this.input.clear();
+  }
+
+  get upgradeCosts() {
+    return { grip: 80 * (this.upgrades.grip + 1), bonus: 120 * (this.upgrades.bonus + 1) };
   }
 
   notify() {
     this.onState({
       status: this.status, score: this.score, best: this.best, message: this.message,
-      level: this.levelIndex + 1, totalLevels: LEVELS.length,
+      level: this.levelIndex + 1, totalLevels: LEVELS.length, levelName: this.level.name,
       collected: this.level.items.filter(item => item.collected).length,
       totalItems: this.level.items.length, storageAvailable: this.storageAvailable,
+      shift: this.shift, wallet: this.wallet, remaining: this.timeLeft,
+      timeLeft: this.timeLeft, deliveryReward: this.deliveryReward, tips: this.tips,
+      upgrades: { ...this.upgrades }, upgradeCosts: this.upgradeCosts,
+      deliveries: this.deliveries, resumed: this.resumed,
     });
   }
 
   start() {
     if (this.status === 'running') return;
-    if (this.status === 'won' || this.status === 'lost') { this.restart(); return; }
-    if (this.status === 'level-complete') { this.levelIndex += 1; this.loadLevel(); }
+    if (this.status === 'lost') { this.retry(); return; }
+    if (this.status === 'won') {
+      this.shift += 1;
+      this.levelIndex = 0;
+      this.loadLevel();
+    } else if (this.status === 'level-complete') {
+      this.levelIndex += 1;
+      this.loadLevel();
+    }
     this.status = 'running';
     this.input.clear();
     this.input.active = true;
@@ -105,6 +143,28 @@ export class Game {
     this.accumulator = 0;
     this.notify();
     this.schedule();
+  }
+
+  retry() {
+    this.stopLoop();
+    this.score = this.levelStartScore;
+    this.loadLevel();
+    this.status = 'ready';
+    this.start();
+    this.draw();
+  }
+
+  buyUpgrade(type) {
+    if (!['level-complete', 'won'].includes(this.status) || !['grip', 'bonus'].includes(type)) return false;
+    const cost = this.upgradeCosts[type];
+    if (this.upgrades[type] >= 3 || this.wallet < cost) return false;
+    this.wallet -= cost;
+    this.upgrades[type] += 1;
+    this.player.grip = this.upgrades.grip;
+    this.message = type === 'grip' ? 'Тормоза настроены. Посадки станут точнее.' : 'Термосумка установлена. Следующие заказы дороже.';
+    this.saveCareer();
+    this.notify();
+    return true;
   }
 
   schedule() {
@@ -138,9 +198,11 @@ export class Game {
     this.stopLoop();
     this.score = 0;
     this.levelIndex = 0;
+    this.shift = 1;
     this.elapsed = 0;
     this.loadLevel();
     this.status = 'ready';
+    this.saveCareer();
     this.start();
     this.draw();
   }
@@ -148,8 +210,7 @@ export class Game {
   updateBest() {
     if (this.score <= this.best) return;
     this.best = this.score;
-    try { localStorage.setItem(STORAGE_KEY, String(this.best)); }
-    catch { this.storageAvailable = false; }
+    this.saveCareer();
   }
 
   finishState(status, message) {
@@ -160,13 +221,43 @@ export class Game {
     this.notify();
   }
 
+  deliver() {
+    if (this.status !== 'running') return;
+    const speedBonus = Math.ceil(this.timeLeft);
+    this.deliveryReward = Math.round((40 + speedBonus + this.tips * 20) * (1 + this.upgrades.bonus * 0.2));
+    this.wallet = Math.min(1e9, this.wallet + this.deliveryReward);
+    this.deliveries += 1;
+    const final = this.levelIndex + 1 === LEVELS.length;
+    this.finishState(final ? 'won' : 'level-complete',
+      'Доставлено: +' + this.deliveryReward + ' ₽. Чаевые ' + this.tips + '/2. Можно улучшить велосипед.');
+    this.saveCareer();
+  }
+
   update(dt) {
     if (this.status !== 'running') return;
     this.elapsed += dt;
+    this.orderElapsed += dt;
+    this.timeLeft = Math.max(0, this.timeLeft - dt);
+    const previousBottom = this.player.y + this.player.h;
     this.player.update(dt, this.input, this.level.platforms);
+    for (const dog of this.level.dogs) {
+      dog.x = dog.baseX + Math.sin(this.orderElapsed * dog.speed + dog.phase) * dog.range;
+    }
     if (this.player.y > 650 || this.level.hazards.some(hazard => overlaps(this.player, hazard))) {
-      this.finishState('lost', 'Заказ отменён. Асфальт оказался убедительнее.');
+      this.finishState('lost', 'Провал в дороге. Повторите этот двор: заработанное не пропало.');
       return;
+    }
+    for (const dog of this.level.dogs) {
+      if (!overlaps(this.player, dog)) continue;
+      // A jump onto the dog safely bounces the rider; side contact ends this attempt.
+      if (previousBottom <= dog.y + 8 && this.player.vy >= 0) {
+        this.player.y = dog.y - this.player.h;
+        this.player.vy = -420;
+        this.message = 'Перепрыгнули охрану. Посылки целы.';
+      } else {
+        this.finishState('lost', 'Местная охрана против доставки. Перепрыгните собаку в следующей попытке.');
+        return;
+      }
     }
     let changed = false;
     for (const item of this.level.items) {
@@ -176,16 +267,29 @@ export class Game {
         changed = true;
       }
     }
-    if (changed) { this.updateBest(); this.notify(); }
-    if (overlaps(this.player, this.level.finish)) {
-      if (this.level.items.every(item => item.collected)) {
-        if (this.levelIndex + 1 < LEVELS.length) this.finishState('level-complete', 'Доставлено. Диспетчер уже нашёл вам ещё один заказ.');
-        else this.finishState('won', 'Все заказы доставлены. Чаевые: «Спасибо, держитесь».');
-      } else if (this.message !== 'Сначала заберите все три посылки во дворе.') {
-        this.message = 'Сначала заберите все три посылки во дворе.';
-        this.notify();
+    for (const coin of this.level.coins) {
+      if (!coin.collected && overlaps(this.player, coin)) {
+        coin.collected = true;
+        this.tips += 1;
+        this.message = '+20 ₽ чаевых при доставке. Забрать все необязательно.';
+        changed = true;
       }
     }
+    if (changed) this.updateBest();
+    if (overlaps(this.player, this.level.finish)) {
+      if (this.level.items.every(item => item.collected)) { this.deliver(); return; }
+      if (this.message !== 'Сначала заберите все три посылки во дворе.') {
+        this.message = 'Сначала заберите все три посылки во дворе.';
+        changed = true;
+      }
+    }
+    const second = Math.ceil(this.timeLeft);
+    if (second !== this.lastSecond) {
+      this.lastSecond = second;
+      changed = true;
+      if (second === 0) this.message = 'Бонус за скорость закончился. Доставку всё ещё можно завершить.';
+    }
+    if (changed) this.notify();
   }
 
   tick(timestamp) {
